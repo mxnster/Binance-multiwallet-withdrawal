@@ -2,7 +2,7 @@
 This script allows you to withdraw coins from the binance balance to multiple wallets. The bot supports all binance coins and all networks. Will be useful for participating in retrodrops and other types of abuse. This bot able to send random amounts to avoid linking wallets, check for invalid wallets, send with random delay.
 
 ## Before Start
-<i>This script has many checks for invalid input. However, use at your own risk. The author is not responsible for any loss of funds.</i>
+<i>This script has many checks for invalid input and other errors. However, use at your own risk. The author is not responsible for any loss of funds.</i>
 
 ## Get Binance API key
 
