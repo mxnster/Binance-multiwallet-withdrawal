@@ -4,7 +4,8 @@ import { config } from './config.js'
 import crypto from 'node:crypto';
 import _ from "lodash"
 
-let txStatuses = { 0: "Email Sent", 1: "Cancelled", 2: "Awaiting Approval", 3: "Rejected", 4: "Processing", 5: "Failure", 6: "Completed" };
+const txStatuses = { 0: "Email Sent", 1: "Cancelled", 2: "Awaiting Approval", 3: "Rejected", 4: "Processing", 5: "Failure", 6: "Completed" };
+const autoConvertableStables = ["USDC", "USDP", "TUSD"]
 const timeout = ms => new Promise(res => setTimeout(res, ms));
 const sign = query_string => crypto.createHmac('sha256', config.secret).update(query_string).digest('hex');
 
@@ -86,25 +87,27 @@ async function withdraw(coin, address, amount, network) {
 
 
 (async () => {
-    let coinData = await getCoinInformation(config.token.toUpperCase())
+    let coinData = await getCoinInformation(config.token.toUpperCase());
     let networks = coinData.networkList.map(item => item.network);
-    console.log(`Balance: ${coinData.free} ${coinData.coin}`);
+    let balance = autoConvertableStables.includes(config.token.toUpperCase()) ? (await getCoinInformation("BUSD")).free : coinData.free;
+    console.log(`Balance: ${balance} ${coinData.coin}`);
 
     if (networks.includes(config.network.toUpperCase())) {
         let networkData = coinData.networkList.find(item => item.network == config.network.toUpperCase());
         let wallets = parseFile("wallets.txt");
         let validWallets = validateWallets(wallets, networkData.addressRegex);
         let amount = typeof (config.amount) == 'string' ? config.amount.replace('.', ',') : config.amount;
+        autoConvertableStables.includes(config.token.toUpperCase()) && console.log(networkData?.specialTips);
 
         if (validWallets) {
-            if (coinData.free >= wallets.length * amount) {
+            if (balance >= wallets.length * amount) {
                 for (let i = 0; i < wallets.length; i++) {
                     let decimals = networkData.withdrawIntegerMultiple.length > 1 ? networkData.withdrawIntegerMultiple.split('.')[1].length : 0;
                     let finalAmount = config.randomizeAmount ? (amount * (_.random(1 - (config.spread / 100), 1))).toFixed(decimals) : amount;
 
                     if (+finalAmount >= +networkData.withdrawMin) {
                         await withdraw(config.token.toUpperCase(), wallets[i], finalAmount, config.network.toUpperCase())
-                    } else console.log(`Minimal amount is: ${networkData.withdrawMin} ${networkData.coin}`);
+                    } else console.log(`Minimal amount is: ${networkData.withdrawMin} ${networkData.coin}, current amount is: ${finalAmount} ${networkData.coin}`);
                 }
             } else console.log('Insufficient funds')
         } else console.log('Please, remove invalid wallets')
