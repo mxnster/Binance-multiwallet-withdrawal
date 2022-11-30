@@ -95,14 +95,14 @@ async function withdraw(coin, address, amount, network) {
         let wallets = parseFile("wallets.txt");
         let validWallets = validateWallets(wallets, networkData.addressRegex);
         let amount = typeof (config.amount) == 'string' ? config.amount.replace('.', ',') : config.amount;
-  
+
         if (validWallets) {
             if (coinData.free >= wallets.length * amount) {
                 for (let i = 0; i < wallets.length; i++) {
                     let decimals = networkData.withdrawIntegerMultiple.length > 1 ? networkData.withdrawIntegerMultiple.split('.')[1].length : 0;
                     let finalAmount = config.randomizeAmount ? (amount * (_.random(1 - (config.spread / 100), 1))).toFixed(decimals) : amount;
 
-                    if (finalAmount >= networkData.withdrawMin) {
+                    if (+finalAmount >= +networkData.withdrawMin) {
                         await withdraw(config.token.toUpperCase(), wallets[i], finalAmount, config.network.toUpperCase())
                     } else console.log(`Minimal amount is: ${networkData.withdrawMin} ${networkData.coin}`);
                 }
